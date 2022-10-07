@@ -44,14 +44,19 @@ def getTracks():
         raise ValueError("Expected format: https://open.spotify.com/playlist/...")
 
     # get list of tracks in a given playlist (note: max playlist length 100)
-    tracks = session.playlist_tracks(playlist_uri)["items"]
+    offset = 0
+    tracks = []
+
+    for i in range(0, 500, 100):
+        tracks += session.playlist_tracks(playlist_uri, offset=offset)["items"]
+        offset += 100
 
     return tracks
 
 
 def generateCSV(tracks):
     # create csv file
-    with open(OUTPUT_FILE_NAME, "w", encoding="utf-8") as file:
+    with open(OUTPUT_FILE_NAME, "a", encoding="utf-8") as file:
         writer = csv.writer(file)
 
         # write header column names
