@@ -15,6 +15,7 @@ GENIUS_TOKEN = os.getenv("GENIUS_TOKEN", "")
 PLAYLIST_NAME = 'Clean Song Playlist'
 OUTPUT_FILE_NAME = "track_info.csv"
 CLEAN_FILE = "clean_tracks.csv"
+EXPLICIT_FILE = "explicit_tracks.csv"
 
 genius = lyricsgenius.Genius(GENIUS_TOKEN)
 
@@ -97,6 +98,15 @@ def getLyrics() -> None:
 
             if not explicit:
                 cleanSongs(artist, track, ID, url)
+
+            else:
+                explicitSongs(artist, track, ID, url)
+
+def explicitSongs(artist, track, ID, url) -> None:
+    with open(EXPLICIT_FILE, "a", encoding="utf-8") as file:
+        writer = csv.writer(file)
+
+        writer.writerow([artist, track, ID, url])
 
 
 def cleanSongs(artist, track, ID, url) -> None:
