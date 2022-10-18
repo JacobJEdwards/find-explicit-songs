@@ -102,6 +102,7 @@ def getLyrics() -> None:
             else:
                 explicitSongs(artist, track, ID, url)
 
+
 def explicitSongs(artist, track, ID, url) -> None:
     with open(EXPLICIT_FILE, "a", encoding="utf-8") as file:
         writer = csv.writer(file)
