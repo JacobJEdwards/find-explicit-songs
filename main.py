@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 from pathlib import Path
 import csv
@@ -11,36 +13,26 @@ import lyricsgenius
 
 
 genius = lyricsgenius.Genius(GENIUS_TOKEN)
+session = newSession()
 
 
 
 def getPlaylist() -> str:
-    playlistLink = input("Enter playlist link: ")
-    return playlistLink
-
-
-def newSession():
-    # authenticate
-    client_credentials_manager = SpotifyClientCredentials(
-        client_id=CLIENT_ID, client_secret=CLIENT_SECRET
-    )
-
-    # create spotify session object
-    session = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
-
-    return session
-
-
-def getTracks() -> list:
-    PLAYLIST_LINK = getPlaylist()
-
-    session = newSession()
-
+    playlistLink: str = input("Enter playlist link: ")
+    
     # get uri from https link
     if match := re.match(r"https://open.spotify.com/playlist/(.*)\?", PLAYLIST_LINK):
         playlist_uri = match.groups()[0]
     else:
         raise ValueError("Expected format: https://open.spotify.com/playlist/...")
+
+    return playlist_uri
+
+
+
+
+def getTracks() -> list:
+    playlist_uri = getPlaylist()
 
     # get list of tracks in a given playlist (note: max playlist length 100)
     offset = 0
@@ -123,7 +115,7 @@ def checkExplicit(song) -> bool:
 
 
 def main() -> None:
-    initialise()
+    initialise(remove_files=True)
 
     # gets the tracks to a playlist, and saves them to a csv file
     tracks = getTracks()
@@ -132,9 +124,10 @@ def main() -> None:
     getLyrics()
 
 
-def initialise() -> None:
-    CLEAN_FILE.unlink(missing_ok=True)
-    OUTPUT_FILE.unlink(missing_ok=True)
+def initialise(remove_files=True) -> None:
+    if (remove_files):
+        CLEAN_FILE.unlink(missing_ok=True)
+        OUTPUT_FILE.unlink(missing_ok=True)
 
 
 if __name__ == '__main__':
