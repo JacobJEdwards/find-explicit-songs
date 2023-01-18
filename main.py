@@ -1,28 +1,20 @@
 import os
+from pathlib import Path
 import csv
 import re
 
+from config import *
+
 import spotipy
-from dotenv import load_dotenv
 from spotipy.oauth2 import SpotifyClientCredentials
 import lyricsgenius
 
-load_dotenv()
-CLIENT_ID = os.getenv("CLIENT_ID", "")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET", "")
-GENIUS_TOKEN = os.getenv("GENIUS_TOKEN", "")
-
-PLAYLIST_NAME = 'Clean Song Playlist'
-OUTPUT_FILE_NAME = "track_info.csv"
-CLEAN_FILE = "clean_tracks.csv"
-EXPLICIT_FILE = "explicit_tracks.csv"
 
 genius = lyricsgenius.Genius(GENIUS_TOKEN)
 
-SWEAR_WORDS = ['CUNT', 'SHIT', 'FUCK', 'BASTARD', 'TWAT', 'DICK', 'BITCH', 'PRICK', 'PISS', 'WANK']
 
 
-def getPlaylist():
+def getPlaylist() -> str:
     playlistLink = input("Enter playlist link: ")
     return playlistLink
 
@@ -39,7 +31,7 @@ def newSession():
     return session
 
 
-def getTracks():
+def getTracks() -> list:
     PLAYLIST_LINK = getPlaylist()
 
     session = newSession()
@@ -62,9 +54,9 @@ def getTracks():
     return tracks
 
 
-def generateCSV(tracks):
+def generateCSV(tracks) -> None:
     # create csv file
-    with open(OUTPUT_FILE_NAME, "a", encoding="utf-8") as file:
+    with open(OUTPUT_FILE, "a", encoding="utf-8") as file:
         writer = csv.writer(file)
 
         # write header column names
@@ -85,7 +77,7 @@ def generateCSV(tracks):
 
 
 def getLyrics() -> None:
-    with open(OUTPUT_FILE_NAME, newline='') as file:
+    with open(OUTPUT_FILE, newline='') as file:
         reader = csv.DictReader(file)
 
         for row in reader:
@@ -141,11 +133,8 @@ def main() -> None:
 
 
 def initialise() -> None:
-    if os.path.exists(CLEAN_FILE):
-        os.remove(CLEAN_FILE)
-
-    if os.path.exists(OUTPUT_FILE_NAME):
-        os.remove(OUTPUT_FILE_NAME)
+    CLEAN_FILE.unlink(missing_ok=True)
+    OUTPUT_FILE.unlink(missing_ok=True)
 
 
 if __name__ == '__main__':
