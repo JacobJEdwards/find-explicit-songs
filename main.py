@@ -1,25 +1,18 @@
 #!/usr/bin/env python3
 
-import os
 from pathlib import Path
 import csv
 import re
 
 from config import *
 
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
-import lyricsgenius
-
-
-genius = lyricsgenius.Genius(GENIUS_TOKEN)
 session = newSession()
 
 
-
+# Returns the uri of the playlist is valid for use with the spotipy library
 def getPlaylist() -> str:
-    playlistLink: str = input("Enter playlist link: ")
-    
+    PLAYLIST_LINK: str = input("Enter playlist link: ")
+
     # get uri from https link
     if match := re.match(r"https://open.spotify.com/playlist/(.*)\?", PLAYLIST_LINK):
         playlist_uri = match.groups()[0]
@@ -29,8 +22,7 @@ def getPlaylist() -> str:
     return playlist_uri
 
 
-
-
+# Get the list of tracks in the spotify playlist using the spotipy libray
 def getTracks() -> list:
     playlist_uri = getPlaylist()
 
@@ -42,10 +34,11 @@ def getTracks() -> list:
         tracks += session.playlist_tracks(playlist_uri, offset=offset)["items"]
         offset += 100
 
-    print('complete')
+    print("complete")
     return tracks
 
 
+# Generates a CSV of all the tracks in the playlist
 def generateCSV(tracks) -> None:
     # create csv file
     with open(OUTPUT_FILE, "a", encoding="utf-8") as file:
@@ -61,51 +54,51 @@ def generateCSV(tracks) -> None:
                 [artist["name"] for artist in track["track"]["artists"]]
             )
 
-            url = track['track']['external_urls']['spotify']
+            url = track["track"]["external_urls"]["spotify"]
             ID = track["track"]["id"]
 
             # write to csv
             writer.writerow([name, artists, ID, url])
 
 
-def getLyrics() -> None:
-    with open(OUTPUT_FILE, newline='') as file:
+def getLyrics(file) -> None:
+    # Reads the list of tracks in the playlist from the designated file
+    with open(file, newline="") as file:
         reader = csv.DictReader(file)
 
         for row in reader:
-            artist, track, ID, url = row['artist'], row['track'], row['id'], row['url']
+            artist, track, ID, url = row["artist"], row["track"], row["id"], row["url"]
 
+            # retrieves song information using the genius api
             song = genius.search_song(title=track, artist=artist)
 
             explicit = checkExplicit(song)
             print(explicit)
 
-            if not explicit:
-                cleanSongs(artist, track, ID, url)
-
-            else:
-                explicitSongs(artist, track, ID, url)
+            # Adds the song to the correct file
+            writeCSV(artist, track, ID, url, explicit)
 
 
-def explicitSongs(artist, track, ID, url) -> None:
-    with open(EXPLICIT_FILE, "a", encoding="utf-8") as file:
+# Function used to write the song information to the correct files
+def writeCSV(artist, track, ID, url, explicit) -> None:
+    # writes to the correct file
+    if explicit:
+        file = EXPLICIT_FILE
+    else:
+        file = CLEAN_FILE
+
+    with open(file, "a", encoding="utf-8") as file:
         writer = csv.writer(file)
 
         writer.writerow([artist, track, ID, url])
 
 
-def cleanSongs(artist, track, ID, url) -> None:
-    with open(CLEAN_FILE, "a", encoding="utf-8") as file:
-        writer = csv.writer(file)
-
-        writer.writerow([artist, track, ID, url])
-
-
+# Checks if the lyrics contain any banned words
 def checkExplicit(song) -> bool:
     if song is None:
         return True
 
-    lyrics = song.lyrics.upper().replace('[', '').replace(']', '').split()
+    lyrics = song.lyrics.upper().replace("[", "").replace("]", "").split()
 
     print(lyrics)
 
@@ -121,14 +114,15 @@ def main() -> None:
     tracks = getTracks()
     generateCSV(tracks)
 
-    getLyrics()
+    getLyrics(OUTPUT_FILE)
 
 
 def initialise(remove_files=True) -> None:
-    if (remove_files):
+    if remove_files:
         CLEAN_FILE.unlink(missing_ok=True)
         OUTPUT_FILE.unlink(missing_ok=True)
+        EXPLICIT_FILE.unlink(missing_ok=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
