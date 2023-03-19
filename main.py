@@ -13,7 +13,7 @@ session = newSession()
 def getPlaylist() -> str:
     PLAYLIST_LINK: str = input("Enter playlist link: ")
 
-    # get uri from https link
+    # get uri from https link and check if valid
     if match := re.match(r"https://open.spotify.com/playlist/(.*)\?", PLAYLIST_LINK):
         playlist_uri = match.groups()[0]
     else:
@@ -72,6 +72,7 @@ def getLyrics(file) -> None:
             # retrieves song information using the genius api
             song = genius.search_song(title=track, artist=artist)
 
+            # chekcs if the song is explicit
             explicit = checkExplicit(song)
             print(explicit)
 
@@ -80,7 +81,7 @@ def getLyrics(file) -> None:
 
 
 # Function used to write the song information to the correct files
-def writeCSV(artist, track, ID, url, explicit) -> None:
+def writeCSV(artist: str, track: str, ID: str, url: str, explicit: bool) -> None:
     # writes to the correct file
     if explicit:
         file = EXPLICIT_FILE
@@ -106,12 +107,20 @@ def checkExplicit(song) -> bool:
         if any(swear in word for swear in SWEAR_WORDS):
             return True
 
+    return False
+
 
 def main() -> None:
     initialise(remove_files=True)
 
     # gets the tracks to a playlist, and saves them to a csv file
-    tracks = getTracks()
+    try:
+        tracks = getTracks()
+    except ValueError as e:
+        print(e)
+        print("Exiting...")
+        return 
+
     generateCSV(tracks)
 
     getLyrics(OUTPUT_FILE)
