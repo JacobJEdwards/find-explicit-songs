@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
 import csv
 import re
 
-from config import *
+from config import (
+    SWEAR_WORDS,
+    CLEAN_FILE,
+    OUTPUT_FILE,
+    EXPLICIT_FILE,
+    newSession,
+    genius,
+)
 
 session = newSession()
 
@@ -119,7 +125,7 @@ def main() -> None:
     except ValueError as e:
         print(e)
         print("Exiting...")
-        return 
+        return
 
     generateCSV(tracks)
 
